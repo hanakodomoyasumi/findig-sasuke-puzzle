@@ -10,4 +10,4 @@ And do some search, found the original puzzle here: http://puzzle.prenda.co/main
 
 This puzzle is created with Block.ly
 
-![Screenshot](https://github.com/hanakodomoyasumi/finding-sasuke-puzzle/SS.png)
+![Screenshot](https://github.com/hanakodomoyasumi/finding-sasuke-puzzle/blob/master/SS.png)
