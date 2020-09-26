@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> Programming Puzzle </title>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=1061,initial-scale=1">
+ <script src="static/blockly_compressed.js"></script>
+ <script src="static/javascript_compressed.js"></script>
+ <script src="static/myblocks.js"></script>
+ <script src="static/en.js"></script>
+ <script src="static/acorn_interpreter.js"></script>
+ <script src="static/jquery-3.1.0.min.js"></script>
+
+<style>
+html, body {
+ margin: 0;
+ padding: 0;
+}
+body {
+ font-family: helvetica, arial, sans-serif;
+}
+#car {
+ height:60px;
+ width:60px;
+ position:absolute;
+ left:12px;
+ top:284px;
+ background-image:url('static/car_sm.png');
+}
+#car.car_up { background-position:-120px 0; }
+#car.car_down { background-position:0 0; }
+#car.car_left { background-position:-180px 0; }
+#car.car_right { background-position:-60px 0; }
+#board {
+ height:384px;
+ width:541px;
+ background-image:url('static/learning_board.png');
+ position:absolute;
+ left:5px;
+ top:5px;
+}
+#blocklyDiv {
+ height:600px;
+ width:500px;
+ position:absolute;
+ left:556px;
+ top:5px;
+}
+#run {
+ width:100px;
+ height:40px;
+ background-color:#5ba55b;
+ color:#fff;
+ position:absolute;
+ left:417px;
+ top:405px;
+ border-radius:6px;
+ text-align:center;
+ line-height:40px;
+ font-family: Arial,Helvetica,sans-serif;
+ font-size:24px;
+ cursor:pointer;
+}
+#stop {
+ width:100px;
+ height:40px;
+ background-color:#d22;
+ color:#fff;
+ position:absolute;
+ left:417px;
+ top:405px;
+ border-radius:6px;
+ text-align:center;
+ line-height:40px;
+ font-family: Arial,Helvetica,sans-serif;
+ font-size:24px;
+ cursor:pointer;
+}
+#instructions {
+ color:#444;
+ position:absolute;
+ left:5px;
+ width:378px;
+ top:394px;
+}
+#instructions h1 {
+ text-align:center;
+ font-size:20px;
+ margin:0 0 8px 0;
+}
+#instructions ol {
+ margin:0;
+}
+#instructions li {
+ margin:7px 0;
+ font-size:15px;
+ line-height:18px;
+}
+#score {
+ color:#444;
+ position:absolute;
+ left:388px;
+ width:158px;
+ top:475px;
+ text-align:center;
+ font-weight:bold;
+ font-size:18px;
+}
+#score_num {
+ font-size:36px;
+}
+a#blockHelp {
+ display:block;
+ position:absolute;
+ left:566px;
+ top:565px;
+ font-size:13px;
+}
+div#shadeContainer {
+ position:absolute;
+ left:0;
+ top:0;
+ width:100%;
+ height:100%;
+ min-height:605px;
+}
+div#shade {
+ position:absolute;
+ left:0;
+ top:0;
+ width:100%;
+ height:100%;
+ background-color:black;
+ opacity:0.8;
+}
+div.modal {
+ position:relative;
+ margin:0 auto;
+ color:#444;
+ background-color:white;
+ border-radius:10px;
+}
+div#result {
+ margin-top:150px;
+ width:500px;
+ padding:40px;
+}
+div.modal {
+ margin-top:20px;
+ width:800px;
+ padding:20px;
+}
+a.closeButton {
+ position:absolute;
+ display:block;
+ background-color:#a00;
+ color:white;
+ top:5px;
+ right:5px;
+ padding:5px 10px;
+ text-decoration:none;
+ font-size:12px;
+ border-radius:5px;
+}
+a.closeButton:hover {
+ text-decoration:underline;
+}
+div#help h1 {
+ margin:5px 0 10px 0;
+}
+p.blockHelp {
+ clear:both;
+}
+img.blockImg {
+ float:left;
+ margin-right:10px;
+ margin-bottom:10px;
+}
+a.againButton, a.tryOptimal, a.endNow, .emailForm button {
+ display:inline-block;
+ background-color:#00f;
+ color:white;
+ padding:5px 10px;
+ text-decoration:none;
+ font-size:12px;
+ border-radius:5px;
+ border-width:0;
+}
+.emailForm label {
+ font-weight:bold;
+}
+p.small {
+ font-size:75%;
+}
+</style>
+</head>
+<body>
+
+ <div id="blocklyDiv"></div>
+ <a id="blockHelp" href="javascript:showModal('help')">Help with code blocks</a>
+ <div id="board">
+  <div id="car" class="car_up"></div>
+ </div>
+ <div id="run" style="display:block;" onclick="runCar()">Run</div>
+ <div id="stop" style="display:none;" onclick="stopCar()">Stop</div>
+ <div id="instructions">
+  <h1>How to play</h1>
+  <ol>
+   <li>Help <b>Naruto</b> get through the maze to find <b>Sasuke</b>.</li>
+   <li>Build a computer program by dragging code blocks from the center and clicking them together in the space on the right.</li>
+   <li>Click “Run” to see what your program does.</li>
+   <li>Try to solve the puzzle using the least number of code blocks.</li>
+  </ol>
+ </div>
+ <div id="shadeContainer" style="display:none">
+  <div id="shade" onclick="closeModal()"></div>
+  <div id="already_optimal_correct" class="modal" style="display:none">
+   <a class="closeButton" href="javascript:closeModal()">Close</a>
+   <p>You have already found the best solution.  This is not the solution with the fewest possible code blocks, but it is correct.</p>
+  </div>
+  <div id="already_optimal_incorrect" class="modal" style="display:none">
+   <a class="closeButton" href="javascript:closeModal()">Close</a>
+   <p>You have already found the best solution, but this one is incorrect.  Do you think you can find it again?</p>
+  </div>
+  <div id="already_optimal_again" class="modal" style="display:none"> 
+
+<p>Congratulations on finding the best solution again!</p>
+
+ </div>
+  <div id="incorrect_first_time" class="modal" style="display:none"> 
+
+ 
+
+  <p>That is incorrect.</p>
+  <p>That try did not cost you any points.</p>
+  <p><a class="againButton" href="javascript:closeModal()">Continue</a><p>
+
+ 
+
+ </div>
+  <div id="incorrect_not_first_time" class="modal" style="display:none"> 
+
+ 
+
+  <p>That is incorrect.</p>
+  <p><a class="againButton" href="javascript:closeModal()">Continue</a><p>
+
+ 
+
+ </div>
+  <div id="non_optimal" class="modal" style="display:none"> 
+
+ 
+
+  <p>You successfully solved the puzzle.</p>
+  <p>You have earned 100 points.</p>
+  <p>You may not have noticed, but you could get the right answer with fewer code blocks than you are using now. In fact, there is a way to solve the puzzle with just 6 code blocks. If you find this simplest solution, you can earn another 100 points.</p>
+
+ 
+
+ <p>
+  <a class="tryOptimal" href="javascript:closeModal()">Keep trying</a>
+  <a class="endNow" href="javascript:quitBeforeOptimal()">End now</a>
+ </p>
+
+ </div>
+  <div id="quits_before_optimal" class="modal" style="display:none"> 
+
+<p>Good try!</p>
+<p>It looks like you have not been able to solve the puzzle with the fewest possible code blocks. That’s okay, you did a good job to solve the puzzle at all. In total, you earned <span class="final_earned"></span> points. Thank you for playing!</p>
+
+ </div>
+  <div id="correct_one_try" class="modal" style="display:none"> 
+
+<p>Congratulations!</p>
+<p>You successfully solved the puzzle. And not only did you solve it, but you solved it with the fewest possible code blocks. That earns you an extra 100 points. In total, you earned <span class="final_earned"></span> points. Thank you for playing!</p>
+
+ </div>
+  <div id="correct_multiple_tries" class="modal" style="display:none"> 
+
+<p>Congratulations!</p>
+<p>You successfully solved the puzzle with the fewest possible code blocks. In total, you earned <span class="final_earned"></span> points. Thank you for playing!</p>
+
+ </div>
+  <div id="looking_for_optimal" class="modal" style="display:none"> 
+
+ 
+
+  <p>You successfully solved the puzzle.</p>
+  <p>You can earn more points if you solve the puzzle with 6 code blocks.</p>
+
+ 
+
+ <p>
+  <a class="tryOptimal" href="javascript:closeModal()">Keep trying</a>
+  <a class="endNow" href="javascript:quitBeforeOptimal()">End now</a>
+ </p>
+
+ </div>
+  <div id="looking_for_optimal_incorrect" class="modal" style="display:none"> 
+
+ 
+
+  <p>That is incorrect.</p>
+  <p>That try did not cost you any points.  There is a way to solve the puzzle with just 6 code blocks.</p>
+
+ 
+
+ <p>
+  <a class="tryOptimal" href="javascript:closeModal()">Keep trying</a>
+  <a class="endNow" href="javascript:quitBeforeOptimal()">End now</a>
+ </p>
+
+ </div>
+  <div id="help" class="modal" style="display:none">
+   <a class="closeButton" href="javascript:closeModal()">Close</a>
+   <h1>Help with Code Blocks</h1>
+   <p>Code blocks are instructions you give to the computer. Click them together under the “When run” block to create a program to control Naruto. Here’s how they work:</p>
+   <p class="blockHelp">
+    <img class="blockImg" src="static/run_block.png" width="85" height="30"/>
+    When you click the “Run” button, everything connected to this block will be done in order.
+   </p>
+   <p class="blockHelp">
+    <img class="blockImg" src="static/move_block.png" width="111" height="29"/>
+    Moves Naruto one square in the direction it is pointing.
+   </p>
+   <p class="blockHelp">
+    <img class="blockImg" src="static/right_block.png" width="101" height="29"/>
+    Turns Naruto to its right (from the Naruto’s perspective).
+   </p>
+   <p class="blockHelp">
+    <img class="blockImg" src="static/left_block.png" width="92" height="29"/>
+    Turns Naruto to its left (from the Naruto’s perspective).
+   </p>
+   <p class="blockHelp">
+    <img class="blockImg" src="static/blue_block.png" width="126" height="64"/>
+    Checks the color of the square Naruto is on. If it’s blue, then any blocks connected inside this one will be done in order. Otherwise they will be skipped.
+   </p>
+   <p class="blockHelp">
+    <img class="blockImg" src="static/green_block.png" width="136" height="64"/>
+    Checks the color of the square Naruto is on. If it’s green, then any blocks connected inside this one will be done in order. Otherwise they will be skipped.
+   </p>
+   <p class="blockHelp">
+    <img class="blockImg" src="static/repeat_n_block.png" width="133" height="64"/>
+    Runs all the blocks inside a specific number of times (you can change the number)
+   </p>
+   <p class="blockHelp">
+    <img class="blockImg" src="static/forever_block.png" width="119" height="60"/>
+    Runs all the blocks inside over and over until Naruto found Sasuke or Naruto gets stuck.
+   </p>
+   <p class="blockHelp"></p>
+  </div>
+ </div>
+
+<script>
+var colors =
+ [[1,0,0,0,1,1,1],
+  [0,2,0,0,1,0,0],
+  [0,2,0,0,1,0,0],
+  [0,0,0,0,0,0,0],
+  [0,0,0,0,2,2,0]];
+var hwalls =
+ [[0,1,1,1,0,0,0],
+  [0,0,1,1,1,0,0],
+  [0,0,1,0,0,0,0],
+  [0,0,1,0,0,0,0],
+  [1,1,1,1,1,1,1]];
+var vwalls =
+ [[0,0,0,0,1,0,1],
+  [1,0,0,0,1,1,1],
+  [1,0,0,0,1,1,1],
+  [1,1,1,1,1,1,1],
+  [1,0,0,1,0,1,1]];
+var carx = 0, cary = 4, dir = 'up', doPause = false, keepGoing = false, success = false;
+var carElt = document.getElementById('car');
+var runElt = document.getElementById('run');
+var stopElt = document.getElementById('stop');
+
+function setImg() {
+ carElt.className = "car_" + dir;
+}
+function setPos() {
+ carElt.style.left = (12+76*carx)+'px';
+ carElt.style.top = (4+70*cary)+'px';
+}
+
+function moveForward() {
+ if (dir == 'up') {
+  if (cary == 0 || hwalls[cary-1][carx]) {
+   keepGoing = false;
+  } else {
+   cary--;
+  }
+ }
+ if (dir == 'left') {
+  if (carx == 0 || vwalls[cary][carx-1]) {
+   keepGoing = false;
+  } else {
+   carx--;
+  }
+ }
+ if (dir == 'down') {
+  if (hwalls[cary][carx]) {
+   keepGoing = false;
+  } else {
+   cary++;
+  }
+ }
+ if (dir == 'right') {
+  if (vwalls[cary][carx]) {
+   keepGoing = false;
+  } else {
+   carx++;
+  }
+ }
+ setPos();
+ if (carx == 6 && cary == 4) {
+  keepGoing = false;
+  success = true;
+  workspace.highlightBlock(null);
+ }
+}
+function turnRight() {
+ if (dir == 'up')         dir = 'right';
+ else if (dir == 'right') dir = 'down';
+ else if (dir == 'down')  dir = 'left';
+ else if (dir == 'left')  dir = 'up';
+ setImg();
+}
+function turnLeft() {
+ if (dir == 'up')         dir = 'left';
+ else if (dir == 'left')  dir = 'down';
+ else if (dir == 'down')  dir = 'right';
+ else if (dir == 'right') dir = 'up';
+ setImg();
+}
+function squareIsBlue() {
+ return colors[cary][carx] == 1;
+}
+function squareIsGreen() {
+ return colors[cary][carx] == 2;
+}
+
+function initFunc(interpreter, scope) {
+ interpreter.setProperty(scope, 'moveForward', interpreter.createNativeFunction(moveForward));
+ interpreter.setProperty(scope, 'turnLeft', interpreter.createNativeFunction(turnLeft));
+ interpreter.setProperty(scope, 'turnRight', interpreter.createNativeFunction(turnRight));
+ interpreter.setProperty(scope, 'squareIsBlue', interpreter.createNativeFunction(function() { return interpreter.createPrimitive(squareIsBlue()); } ));
+ interpreter.setProperty(scope, 'squareIsGreen', interpreter.createNativeFunction(function() { return interpreter.createPrimitive(squareIsGreen()); }));
+ interpreter.setProperty(scope, 'whenRun', interpreter.createNativeFunction(function() {}));
+ interpreter.setProperty(scope, 'highlightBlock', interpreter.createNativeFunction(function(id) { doPause = true; workspace.highlightBlock(id ? id.toString() : ''); }));
+};
+function runCar() {
+ carx = 0;
+ cary = 4;
+ setPos();
+ dir = 'up';
+ setImg();
+
+ bad_repeat_numbers = false;
+ disableOrphans();
+ var code = Blockly.JavaScript.workspaceToCode(workspace);
+ if (bad_repeat_numbers) {
+  alert('At least one "Repeat...times" block doesn\'t contain a number.');
+  enableAllBlocks();
+ } else {
+  var blockDomText = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace));
+  /*$.post("run", {'code': blockDomText}).done(function(resp) {
+  const testt = 1;
+   if (testt == 1) {*/
+    var myInterpreter = new Interpreter(code, initFunc);
+
+    function stopStyle() {
+     enableAllBlocks();
+     runElt.style.display = 'block';
+     stopElt.style.display = 'none';
+    }
+
+    function nextStep() {
+     if (!keepGoing) {
+      stopStyle();
+	  // karo kene
+      return;
+     }
+
+     doPause = false;
+     if (myInterpreter.step()) {
+      window.setTimeout(nextStep, doPause ? 30 : 0);
+     } else {
+      workspace.highlightBlock(null);
+	  // ng kene
+      stopStyle();
+     }
+    }
+    runElt.style.display = 'none';
+    stopElt.style.display = 'block';
+    workspace.traceOn(true);
+    workspace.highlightBlock(null);
+    keepGoing = true;
+    success = false;
+    nextStep();
+   /*} else {
+    alert(resp.error);
+   }
+  }).fail(function() {
+   alert("Error communicating with Prenda server.  Please try again later.");
+  });*/
+ }
+}
+function closeModal() {
+ document.getElementById("shadeContainer").style.display = "none";
+}
+function showModal(id) {
+ var shadeContElt = document.getElementById("shadeContainer");
+ var modals = shadeContElt.getElementsByTagName("div");
+ for (var i = modals.length - 1; i >= 0; --i) {
+  if (modals[i].id == id) {
+   modals[i].style.display = "block";
+  } else if (modals[i].className == "modal") {
+   modals[i].style.display = "none";
+  }
+ }
+ shadeContElt.style.display = "block";
+}
+function showResult(attdata) {
+ setTextByClass("final_earned", attdata.earned_if_solved);
+ if (attdata.already_optimal) {
+  if (!success) {
+   showModal("already_optimal_incorrect");
+  } else if (attdata.this_try_optimal) {
+   showModal("already_optimal_again");
+  } else {
+   showModal("already_optimal_correct");
+  }
+ } else if (!success) {
+  setTextById("score_num", attdata.could_earn);
+  if (attdata.already_solved) {
+   setTextById("could_earn_optimal", attdata.could_earn_optimal);
+   showModal("looking_for_optimal_incorrect");
+  } else {
+   setTextById("could_earn", attdata.could_earn);
+   if (attdata.failed_attempts === 0) {
+     showModal("incorrect_first_time");
+   } else {
+     showModal("incorrect_not_first_time");
+   }
+  }
+ } else if (attdata.this_try_optimal) {
+  setTextById("score_num", attdata.earned_if_optimal);
+  $.post("solved_optimal").done(function() {
+   setTextByClass("final_earned", attdata.earned_if_optimal);
+   if (attdata.already_solved) {
+    showModal("correct_multiple_tries");
+   } else {
+    showModal("correct_one_try");
+   }
+  }).fail(function() {
+   alert("Error saving your solution.  Please try again later.");
+  });
+ } else if (attdata.already_solved) {
+  setTextById("score_num", attdata.earned_if_solved);
+  showModal("looking_for_optimal");
+ } else {
+  setTextById("score_num", attdata.earned_if_solved);
+  $.post("solved").done(function() {
+   setTextById("earned", attdata.earned_if_solved);
+   setTextById("failed_attempts", attdata.failed_attempts);
+   var solvedIn3orMoreTxtElt = document.getElementById("solved_in_3_or_more_txt");
+   var solvedIn1or2TxtElt = document.getElementById("solved_in_1_or_2_txt");
+   if (solvedIn3orMoreTxtElt && solvedIn1or2TxtElt) {
+    if (attdata.failed_attempts <= 1) {
+     solvedIn3orMoreTxtElt.style.display = "none";
+     solvedIn1or2TxtElt.style.display = "block";
+    } else {
+     solvedIn3orMoreTxtElt.style.display = "block";
+     solvedIn1or2TxtElt.style.display = "none";
+    }
+   }
+   showModal("non_optimal");
+  }).fail(function() {
+   alert("Error saving your solution.  Please try again later.");
+  });
+ }
+}
+function setTextById(id, txt) {
+ var elt = document.getElementById(id);
+ if (elt) {
+  elt.innerHTML = txt;
+ }
+}
+function setTextByClass(cls, txt) {
+ var elts = document.getElementsByTagName("span");
+ for (var i = elts.length - 1; i >= 0; --i) {
+  if (elts[i].className == cls) {
+   elts[i].innerHTML = txt;
+  }
+ }
+}
+function stopCar() {
+ keepGoing = false;
+ success = true
+}
+function disableOrphans() {
+ var blocks = workspace.getAllBlocks();
+ for (var i = 0; blocks[i]; ++i) {
+  blocks[i].setDisabled(blocks[i].getRootBlock().type != 'when_run');
+ }
+}
+function enableAllBlocks() {
+ var blocks = workspace.getAllBlocks();
+ for (var i = 0; blocks[i]; ++i) {
+  blocks[i].setDisabled(false);
+ }
+}
+function quitBeforeOptimal() {
+ showModal('quits_before_optimal');
+}
+function checkEmailForm(inputId) {
+ var emailInputElt = document.getElementById(inputId);
+ if (!emailInputElt) {
+  return false;
+ }
+ if (emailInputElt.value.indexOf('@') === -1) {
+  alert("Please enter a valid email address");
+  return false;
+ }
+ return true;
+}
+</script>
+
+ <xml id="toolbox" style="display:none">
+  <block type="move_forward"></block>
+  <block type="turn_right"></block>
+  <block type="turn_left"></block>
+  <block type="if_blue"></block>
+  <block type="if_green"></block>
+  <block type="repeat_forever"></block>
+  <block type="repeat_n"></block>
+ </xml>
+
+ <script>
+  var workspace = Blockly.inject('blocklyDiv', {toolbox: document.getElementById('toolbox'), media: 'static/media/', trashcan: true, scrollbars: true});
+  Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
+
+  var xml = '<xml><block type="when_run" deletable="false" movable="false" x="10" y="10"></block></xml>';
+  Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(xml), workspace);
+ </script>
+	</html>
