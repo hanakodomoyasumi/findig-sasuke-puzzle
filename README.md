@@ -14,3 +14,6 @@ This puzzle is created with Block.ly
 
 # How to use
 Just clone or download the file, extract it and open the main.html with your browser
+
+# Demo
+[Finding Sasuke Puzzle](https://snowfluke.github.io/findingSasukePuzzle)
